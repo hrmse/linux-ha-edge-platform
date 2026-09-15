@@ -1,0 +1,3 @@
+---
+# Copy outside this repository, encrypt with ansible-vault or source a secret manager.
+vault_edge_vrrp_password: REPLACE_WITH_A_SECRET

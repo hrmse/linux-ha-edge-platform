@@ -1,0 +1,35 @@
+global_defs {
+  router_id EDGE_{{ inventory_hostname | upper }}
+  enable_script_security
+  script_user root
+}
+
+vrrp_script chk_haproxy {
+  script "/usr/local/libexec/check-haproxy.sh"
+  interval 2
+  fall 2
+  rise 2
+  timeout 1
+}
+
+vrrp_instance VI_EDGE {
+  state BACKUP
+  interface {{ edge_interface }}
+  virtual_router_id {{ edge_vrrp_router_id }}
+  priority {{ edge_vrrp_priority }}
+  advert_int 1
+  unicast_src_ip {{ ansible_host }}
+  unicast_peer {
+    {{ edge_unicast_peer }}
+  }
+  authentication {
+    auth_type PASS
+    auth_pass {{ edge_vrrp_password }}
+  }
+  virtual_ipaddress {
+    {{ edge_vip }} dev {{ edge_interface }}
+  }
+  track_script {
+    chk_haproxy
+  }
+}

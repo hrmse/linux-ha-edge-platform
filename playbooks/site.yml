@@ -1,0 +1,7 @@
+---
+- name: Configure a hardened high-availability Linux edge tier
+  hosts: edge
+  become: true
+  gather_facts: true
+  roles:
+    - role: edge

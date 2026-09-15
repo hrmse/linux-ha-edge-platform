@@ -1,0 +1,36 @@
+global
+  log stdout format raw local0
+  user haproxy
+  group haproxy
+  maxconn 2048
+  ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+
+defaults
+  mode http
+  log global
+  option httplog
+  option dontlognull
+  timeout connect 5s
+  timeout client 30s
+  timeout server 30s
+  retries 3
+
+frontend https_in
+  bind {{ edge_vip.split('/')[0] }}:443 ssl crt {{ edge_haproxy_tls_certificate }} alpn h2,http/1.1
+  http-request set-header X-Forwarded-Proto https
+  http-response set-header Strict-Transport-Security max-age=31536000
+  default_backend application
+
+backend application
+  balance leastconn
+  option httpchk GET /healthz
+  http-check expect status 200
+{% for backend in edge_haproxy_backends %}
+  server {{ backend.name }} {{ backend.address }}:{{ backend.port }} check ssl verify none
+{% endfor %}
+
+listen stats
+  bind {{ edge_haproxy_stats_bind }}
+  stats enable
+  stats uri /metrics
+  no log
